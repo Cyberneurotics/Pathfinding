@@ -45,7 +45,7 @@ int **m3 = new int*[16]{
 	new int[16]{1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1},
 
 };
-Map* map3 = new Map(16, 16, m3, new Agent(0, 0), Coordinate(15, 15));
+Map* map3 = new Map(16, 16, m3, new Agent(7,6), Coordinate(15, 15));
 
 Algorithm * algo;
 
@@ -59,7 +59,7 @@ void free() {
 
 int main()
 {
-	algo = new IDS(map2);
+	algo = new BFS(map3);
 	algo->MoveToTarget();
 	delete map2;
 	getchar();

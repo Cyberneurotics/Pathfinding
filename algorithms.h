@@ -4,9 +4,9 @@
 #include "map.h"
 #include <vector>
 #include <stack>
+#include <queue>
 
 using namespace std;
-
 
 class Algorithm
 {
@@ -37,6 +37,8 @@ public:
 			fill(parent_map[i].begin(), parent_map[i].end(), Coordinate{ -1, -1 });
 		}
 	}
+
+	void MoveToTarget();
 };
 
 class RealTime : public Algorithm {
@@ -47,7 +49,6 @@ class RealTime : public Algorithm {
 class DFS : public NonRealTime {
 public:
 	bool FindPath();
-	void MoveToTarget();
 	DFS(Map *map) : NonRealTime(map) {}
 };
 
@@ -58,11 +59,20 @@ public:
 	vector<vector<bool>> visited;
 
 	bool FindPath();
-	void MoveToTarget();
 
 	bool DLS(Coordinate src,  int limit);
 	bool IDDFS(int max_depth);
 	IDS(Map *map) : NonRealTime(map) {}
+};
+
+//breadth first search
+class BFS : public NonRealTime {
+public:
+	queue<Coordinate> queue;
+
+	bool FindPath();
+
+	BFS(Map *map) :NonRealTime(map) {}
 };
 
 
