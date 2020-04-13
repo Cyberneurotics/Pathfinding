@@ -53,7 +53,7 @@ class IDS : public NonRealTime {
 public:
 	bool FindPath();
 
-	bool DLS(Node src, int limit);
+	bool DLS(Node *node_ptr, int limit);
 	bool IDDFS(int max_depth);
 	IDS(Map *map) : NonRealTime(map) {}
 };
@@ -61,7 +61,7 @@ public:
 //breadth first search
 class BFS : public NonRealTime {
 public:
-	queue<Node> queue;
+	queue<Node*> queue;
 
 	bool FindPath();
 
@@ -70,7 +70,7 @@ public:
 
 class Dijkstra : public NonRealTime {
 public:
-	priority_queue<Node> queue;
+	priority_queue<Node*> queue;
 	bool FindPath();
 
 	Dijkstra(Map *map) : NonRealTime(map) {}
