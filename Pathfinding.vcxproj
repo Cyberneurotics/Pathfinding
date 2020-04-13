@@ -151,13 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Agent.h" />
     <ClInclude Include="algorithms.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Agent.cpp" />
     <ClCompile Include="algorithms.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="Pathfinding.cpp" />

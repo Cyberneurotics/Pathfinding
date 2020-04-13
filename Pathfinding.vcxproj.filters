@@ -24,9 +24,6 @@
     <ClInclude Include="map.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Agent.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -39,9 +36,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="map.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Agent.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

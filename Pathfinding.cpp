@@ -11,7 +11,7 @@ int **m1 = new int*[4]{
 		new int[4]{1, 1, 1, 0},
 		new int[4]{0, 0, 1, 1}
 };
-Map *map1 = new Map(4, 4, m1, new Agent(0, 0), Coordinate(3, 3));
+Map *map1 = new Map(4, 4, m1, Coordinate(0, 0), Coordinate(3, 3));
 
 int **m2 = new int*[8]{
 	new int[8]{1,1,1,1,1,0,1,1},
@@ -23,7 +23,7 @@ int **m2 = new int*[8]{
 	new int[8]{1,1,0,1,1,0,1,1},
 	new int[8]{1,1,0,0,1,1,1,1},
 };
-Map* map2 = new Map(8, 8, m2, new Agent(0, 0), Coordinate(3,3));
+Map* map2 = new Map(8, 8, m2, Coordinate(0, 0), Coordinate(3, 3));
 
 
 int **m3 = new int*[16]{
@@ -45,7 +45,7 @@ int **m3 = new int*[16]{
 	new int[16]{1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1},
 
 };
-Map* map3 = new Map(16, 16, m3, new Agent(7,6), Coordinate(15, 15));
+Map* map3 = new Map(16, 16, m3, Coordinate(7, 6), Coordinate(15, 15));
 
 Algorithm * algo;
 
@@ -54,14 +54,14 @@ void initialize(Map* map) {
 }
 
 void free() {
-	
+
 }
 
 int main()
 {
-	algo = new BFS(map3);
+	algo = new DFS(map3);
 	algo->MoveToTarget();
-	delete map2;
+	delete map3;
 	getchar();
 	return 0;
 }

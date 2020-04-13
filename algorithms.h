@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Agent.h"
 #include "map.h"
 #include <vector>
 #include <stack>
@@ -13,36 +12,32 @@ class Algorithm
 public:
 	Map* map;
 	int nodes = 0;
-	
+
 	virtual void MoveToTarget() = 0;
 	virtual bool FindPath() = 0;
 
 	bool ReachTarget();
 	bool ReachTarget(Coordinate);
+	bool ReachTarget(Node);
 	Algorithm(Map*);
 };
 
 class MultiAgent {
-	vector<Agent> agents;
+	vector<Coordinate> agents;
 };
 
 class NonRealTime : public Algorithm {
 public:
 	stack<Coordinate> route;
-	vector<vector<Coordinate>> parent_map;
-	NonRealTime(Map *map) : Algorithm(map) {
-		parent_map.resize(map->width);
-		for (int i = 0; i < map->width; i++) {
-			parent_map[i].resize(map->height);
-			fill(parent_map[i].begin(), parent_map[i].end(), Coordinate{ -1, -1 });
-		}
-	}
+
+	NonRealTime(Map *map) : Algorithm(map) {}
 
 	void MoveToTarget();
+	bool GenerateRoute();
 };
 
 class RealTime : public Algorithm {
-	Agent::directions next_dir;
+	Coordinate next_dir;
 };
 
 //depth first search
@@ -56,11 +51,9 @@ public:
 //iterative deepening search
 class IDS : public NonRealTime {
 public:
-	vector<vector<bool>> visited;
-
 	bool FindPath();
 
-	bool DLS(Coordinate src,  int limit);
+	bool DLS(Node src, int limit);
 	bool IDDFS(int max_depth);
 	IDS(Map *map) : NonRealTime(map) {}
 };
@@ -68,11 +61,19 @@ public:
 //breadth first search
 class BFS : public NonRealTime {
 public:
-	queue<Coordinate> queue;
+	queue<Node> queue;
 
 	bool FindPath();
 
 	BFS(Map *map) :NonRealTime(map) {}
+};
+
+class Dijkstra : public NonRealTime {
+public:
+	priority_queue<Node> queue;
+	bool FindPath();
+
+	Dijkstra(Map *map) : NonRealTime(map) {}
 };
 
 

@@ -1,26 +1,32 @@
 #include "pch.h"
 #include "map.h"
-
+#include <climits>
 
 Map::Map()
 {
 }
 
-Map::Map(int w, int h, int** map, Agent* agent, Coordinate co)
-	:width(w), height(h), matrix(map), agent(agent), target(co)
+Map::Map(int w, int h, int** map, Coordinate agent, Coordinate target)
+	:width(w), height(h)
 {
+	matrix.resize(width);
+	for (auto &node : matrix) {
+		node.resize(height);
+	}
 
+	for (int i = 0; i < width; i++) {
+		for (int j = 0; j < height; j++) {
+			matrix[i][j] = Node{ Coordinate{i,j} , (bool)map[i][j],INT_MAX, NULL, false };
+		}
+	}
+
+	this->agent = agent;
+	this->target = target;
 }
 
 
 Map::~Map()
 {
-	if (matrix) {
-		for (int i = 0; i < width; i++) {
-			delete[] matrix[i];
-		}
-		delete[] matrix;
-	}
 }
 
 
@@ -30,7 +36,7 @@ bool Map::IsValid(int x, int y) {
 
 bool Map::IsPassable(int x, int y)
 {
-	return IsValid(x, y) && matrix[x][y];
+	return IsValid(x, y) && matrix[x][y].passable;
 }
 
 bool Map::IsPassable(Coordinate co)
@@ -50,13 +56,13 @@ void Map::DisplayMap()
 		std::cout << "©¦";
 		for (int j = 0; j < height; j++) {
 			std::cout << " ";
-			if (i == agent->GetX() && j == agent->GetY()) {
+			if (i == agent.x && j == agent.y) {
 				std::cout << "A";
 			}
 			else if (i == target.x && j == target.y) {
 				std::cout << "D";
 			}
-			else if (!matrix[i][j]) {
+			else if (!matrix[i][j].passable) {
 				std::cout << "+";
 			}
 			else {

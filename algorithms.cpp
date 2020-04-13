@@ -3,6 +3,7 @@
 #include "algorithms.h"
 #include <time.h>
 #include <math.h>
+#include <climits>
 
 inline void PrintCo(Coordinate co) {
 	cout << "(" << co.x << ", " << co.y << ")" << endl;
@@ -10,13 +11,19 @@ inline void PrintCo(Coordinate co) {
 
 bool Algorithm::ReachTarget()
 {
-	return map->agent->GetX() == map->target.x && map->agent->GetY() == map->target.y;
+	return map->agent.x == map->target.x && map->agent.y == map->target.y;
 }
 
 bool Algorithm::ReachTarget(Coordinate co)
 {
 	return co.x == map->target.x && co.y == map->target.y;
 }
+
+bool Algorithm::ReachTarget(Node node)
+{
+	return ReachTarget(node.co);
+}
+
 
 
 Algorithm::Algorithm(Map* map)
@@ -32,13 +39,27 @@ void NonRealTime::MoveToTarget()
 			return;
 		}
 
-	map->DisplayMap();
-	while (!(map->agent->GetX() == map->target.x  && map->agent->GetY() == map->target.y))
+	while (!ReachTarget())
 	{
-		map->agent->MoveAgent(route.top());
+		map->agent = route.top();
 		route.pop();
 		map->DisplayMap();
 	}
+}
+
+bool NonRealTime::GenerateRoute()
+{
+	auto p = map->matrix[map->target.x][map->target.y].parent;
+	if (!p) {
+		return false;
+	}
+
+	route.push(map->target);
+	while (p) {
+		route.push(p->co);
+		p = p->parent;
+	}
+	return true;
 }
 
 
@@ -46,33 +67,36 @@ bool DFS::FindPath()
 {
 	clock_t clk = clock();
 
-	stack<Coordinate> stk;
-	vector<vector<bool>> visited(map->width, vector<bool>(map->height));
+	stack<Node*> stk;
 
-	Coordinate start = { map->agent->GetX(), map->agent->GetY() };
-	stk.push(start);
+	Node start = map->matrix[map->agent.x][map->agent.y];
+	stk.push(&start);
 	while (!stk.empty()) {
-		auto node = stk.top();
+		auto node_ptr = stk.top();
 		stk.pop();
 
-		if (node.x == map->target.x && node.y == map->target.y) {
+		if (ReachTarget(*node_ptr)) {
 			break;
 		}
-		if (!visited[node.x][node.y]) {
-			visited[node.x][node.y] = true;
+
+		if (!node_ptr->visited) {
+			node_ptr->visited = true;
 		}
 
 		Coordinate adjs[] = {
-			Coordinate{node.x + 1, node.y},
-			Coordinate{node.x - 1, node.y},
-			Coordinate{node.x, node.y + 1},
-			Coordinate{node.x, node.y - 1}
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
 		};
 
 		for (auto adj : adjs) {
-			if (map->IsPassable(adj) && !visited[adj.x][adj.y]) {
-				stk.push(adj);
-				parent_map[adj.x][adj.y] = node;
+			if (map->IsPassable(adj)) {
+				Node *adj_node = &map->matrix[adj.x][adj.y];
+				if (!adj_node->visited) {
+					stk.push(adj_node);
+					adj_node->parent = node_ptr;
+				}
 			}
 		}
 
@@ -81,20 +105,10 @@ bool DFS::FindPath()
 		}
 	}
 
-	auto p = parent_map[map->target.x][map->target.y];
-	if (p.x == -1) {
-		cout << "no path found" << endl;
+
+	if (!GenerateRoute()) {
+		cout << "no path found!" << endl;
 		return false;
-	}
-
-
-
-	//PrintCo(map->target);
-	route.push(map->target);
-	while (!(p.x == map->agent->GetX() && p.y == map->agent->GetY())) {
-		//PrintCo(p);
-		route.push(p);
-		p = parent_map[p.x][p.y];
 	}
 
 	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
@@ -113,14 +127,14 @@ bool IDS::FindPath()
 		return false;
 	}
 
-	auto p = parent_map[map->target.x][map->target.y];
+	auto p = map->matrix[map->target.x][map->target.y].parent;
 
 	//PrintCo(map->target);
 	route.push(map->target);
-	while (!(p.x == map->agent->GetX() && p.y == map->agent->GetY())) {
+	while (!ReachTarget(*p)) {
 		//PrintCo(p);
-		route.push(p);
-		p = parent_map[p.x][p.y];
+		route.push(p->co);
+		p = p->parent;
 	}
 
 	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
@@ -128,29 +142,29 @@ bool IDS::FindPath()
 	return true;
 }
 
-bool IDS::DLS(Coordinate src, int limit)
+bool IDS::DLS(Node node, int limit)
 {
-	if (ReachTarget(src))
+	if (ReachTarget(node))
 		return true;
 
-	if (!visited[src.x][src.y]) {
-		visited[src.x][src.y] = true;
+	if (!node.visited) {
+		node.visited = true;
 	}
 	// If reached the maximum depth, stop recursing. 
 	if (limit <= 0)
 		return false;
 
 	// Recur for all the vertices adjacent to source vertex 
-
-	Coordinate adjs[] = {
-		Coordinate{src.x + 1, src.y},
-		Coordinate{src.x - 1,src.y},
-		Coordinate{src.x, src.y + 1},
-		Coordinate{src.x, src.y - 1}
+	Node adjs[] = {
+			map->matrix[node.co.x + 1][node.co.y],
+			map->matrix[node.co.x - 1][node.co.y],
+			map->matrix[node.co.x][node.co.y + 1],
+			map->matrix[node.co.x][node.co.y - 1],
 	};
+
 	for (auto adj : adjs) {
-		if (map->IsPassable(adj) && !visited[adj.x][adj.y]) {
-			parent_map[adj.x][adj.y] = src;
+		if (adj.passable && !adj.visited) {
+			adj.parent = &node;
 			nodes++;
 			if (DLS(adj, limit - 1) == true)
 				return true;
@@ -163,16 +177,9 @@ bool IDS::DLS(Coordinate src, int limit)
 bool IDS::IDDFS(int max_depth)
 {
 	for (int i = 0; i <= max_depth; i++) {
-		visited.resize(map->width);
-		for (int j = 0; j < map->width; j++) {
-			visited[j].resize(map->height);
-			fill(visited[j].begin(), visited[j].end(), 0);
-		}
 
-		vector<vector<bool>> visited(map->width, vector<bool>(map->height));
-		
 		nodes = 0;
-		if (DLS(Coordinate{ map->agent->GetX(), map->agent->GetY() },  i) == true)
+		if (DLS(map->matrix[map->agent.x][map->agent.y], i) == true)
 			return true;
 	}
 	return false;
@@ -182,31 +189,29 @@ bool BFS::FindPath()
 {
 	clock_t clk = clock();
 
-	vector<vector<bool>> visited(map->width, vector<bool>(map->height));
-
-	queue.push(Coordinate{ map->agent->GetX(), map->agent->GetY() });
+	queue.push(map->matrix[map->agent.x][map->agent.y]);
 	while (!queue.empty()) {
 		auto node = queue.front();
 		queue.pop();
-		
+
 		if (ReachTarget(node)) {
 			break;
 		}
 
-		if (!visited[node.x][node.y]) {
-			visited[node.x][node.y] = true;
+		if (!node.visited) {
+			node.visited = true;
 		}
 
-		Coordinate adjs[] = {
-			Coordinate{node.x + 1, node.y},
-			Coordinate{node.x - 1, node.y},
-			Coordinate{node.x, node.y + 1},
-			Coordinate{node.x, node.y - 1}
+		Node adjs[] = {
+			map->matrix[node.co.x + 1][node.co.y],
+			map->matrix[node.co.x - 1][node.co.y],
+			map->matrix[node.co.x][node.co.y + 1],
+			map->matrix[node.co.x][node.co.y - 1],
 		};
 		for (auto adj : adjs) {
-			if (map->IsPassable(adj) && !visited[adj.x][adj.y]) {
+			if (adj.passable && !adj.visited) {
 				queue.push(adj);
-				parent_map[adj.x][adj.y] = node;
+				adj.parent = &node;
 			}
 		}
 
@@ -214,16 +219,9 @@ bool BFS::FindPath()
 			nodes = queue.size();
 	}
 
-	auto p = parent_map[map->target.x][map->target.y];
-	if (p.x == -1) {
-		cout << "no path found" << endl;
+	if (!GenerateRoute()) {
+		cout << "no path found!" << endl;
 		return false;
-	}
-
-	route.push(map->target);
-	while (!(p.x == map->agent->GetX() && p.y == map->agent->GetY())) {
-		route.push(p);
-		p = parent_map[p.x][p.y];
 	}
 
 	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
@@ -231,3 +229,47 @@ bool BFS::FindPath()
 	return true;
 }
 
+bool Dijkstra::FindPath()
+{
+	clock_t clk = clock();
+
+	queue.push(map->matrix[map->agent.x][map->agent.y]);
+	map->matrix[map->agent.x][map->agent.y].weight = 0;
+	while (!queue.empty()) {
+		auto node = queue.top();
+		queue.pop();
+
+		if (ReachTarget(node))
+			break;
+
+		if (!node.visited) {
+			node.visited = true;
+		}
+
+		Node adjs[] = {
+			map->matrix[node.co.x + 1][node.co.y],
+			map->matrix[node.co.x - 1][node.co.y],
+			map->matrix[node.co.x][node.co.y + 1],
+			map->matrix[node.co.x][node.co.y - 1],
+		};
+		for (auto adj : adjs) {
+			if (adj.passable && !adj.visited && adj.weight > node.weight + 1) {
+				adj.weight = node.weight + 1;
+				queue.push(adj);
+				adj.parent = &node;
+			}
+		}
+
+		if (queue.size() > nodes)
+			nodes = queue.size();
+	}
+
+	if (!GenerateRoute()) {
+		cout << "no path found!" << endl;
+		return false;
+	}
+
+	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
+	cout << "Nodes expanded: " << nodes << endl;
+	return true;
+}
