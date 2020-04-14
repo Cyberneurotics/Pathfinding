@@ -43,7 +43,7 @@ void NonRealTime::MoveToTarget()
 	{
 		map->agent = route.top();
 		route.pop();
-		//map->DisplayMap();
+		map->DisplayMap();
 	}
 }
 
@@ -252,7 +252,7 @@ bool Dijkstra::FindPath()
 
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
 	queue.push(start);
-	start->weight = 0;
+	start->f = 0;
 	while (!queue.empty()) {
 		auto node_ptr = queue.top();
 		queue.pop();
@@ -275,10 +275,122 @@ bool Dijkstra::FindPath()
 		for (auto adj : adjs) {
 			if (map->IsPassable(adj)) {
 				Node *adj_node = &map->matrix[adj.x][adj.y];
-				if (!adj_node->visited && adj_node->weight > node_ptr->weight+1) {
-					adj_node->weight = node_ptr->weight + 1;
+				if (!adj_node->visited && adj_node->g > node_ptr->g+1) {
+					adj_node->f = node_ptr->f + 1;
 					queue.push(adj_node);
 					adj_node->parent = node_ptr;
+				}
+			}
+		}
+
+		if (queue.size() > nodes)
+			nodes = queue.size();
+	}
+
+	if (!GenerateRoute()) {
+		cout << "no path found!" << endl;
+		return false;
+	}
+
+	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
+	cout << "Nodes expanded: " << nodes << endl;
+	return true;
+}
+
+inline int Manhattan(Coordinate a, Coordinate b) {
+	return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+bool BestFirst::FindPath()
+{
+	clock_t clk = clock();
+
+	Node* start = &map->matrix[map->agent.x][map->agent.y];
+	start->f = Manhattan(start->co, map->target);
+	queue.push(start);
+	
+	while (!queue.empty()) {
+		auto node_ptr = queue.top();
+		queue.pop();
+
+		if (ReachTarget(*node_ptr))
+			break;
+
+		if (node_ptr->visited) {
+			continue;
+		}
+		node_ptr->visited = true;
+
+		Coordinate adjs[] = {
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+		};
+
+		for (auto adj : adjs) {
+			if (map->IsPassable(adj)) {
+				Node *adj_node = &map->matrix[adj.x][adj.y];
+				adj_node->f = Manhattan(adj_node->co, map->target);
+				if (!adj_node->visited) {
+					queue.push(adj_node);
+					adj_node->parent = node_ptr;
+				}
+			}
+		}
+
+		if (queue.size() > nodes)
+			nodes = queue.size();
+	}
+
+	if (!GenerateRoute()) {
+		cout << "no path found!" << endl;
+		return false;
+	}
+
+	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
+	cout << "Nodes expanded: " << nodes << endl;
+	return true;
+}
+
+bool Astar::FindPath()
+{
+	clock_t clk = clock();
+
+	Node* start = &map->matrix[map->agent.x][map->agent.y];
+	start->f = Manhattan(start->co, map->target);
+	start->g = 0;
+	queue.push(start);
+
+	while (!queue.empty()) {
+		auto node_ptr = queue.top();
+		queue.pop();
+
+		if (ReachTarget(*node_ptr))
+			break;
+
+		if (node_ptr->visited) {
+			continue;
+		}
+		node_ptr->visited = true;
+
+		Coordinate adjs[] = {
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+		};
+
+		for (auto adj : adjs) {
+			if (map->IsPassable(adj)) {
+				Node *adj_node = &map->matrix[adj.x][adj.y];
+				if (!adj_node->visited) {
+					if (adj_node->g > node_ptr->g + 1) {
+						adj_node->g = node_ptr->g + 1;
+					}
+					adj_node->f = adj_node->g + Manhattan(adj_node->co, map->target);
+					adj_node->parent = node_ptr;
+					queue.push(adj_node);				
 				}
 			}
 		}

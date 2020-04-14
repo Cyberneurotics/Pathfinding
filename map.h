@@ -12,13 +12,13 @@ struct Coordinate {
 
 struct Node {
 	Coordinate co;
-	bool passable;
-	int weight;
+	bool passable;	
 	Node* parent;
 	bool visited;
+	int f, g;
 
 	friend bool operator<(Node a, Node b) {
-		return a.weight > b.weight;
+		return a.f > b.f;
 	}
 };
 

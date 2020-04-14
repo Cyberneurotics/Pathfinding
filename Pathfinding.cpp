@@ -111,7 +111,7 @@ Algorithm * algo;
 
 int main()
 {
-	algo = new IDS(map4);
+	algo = new Astar(map4);
 	algo->MoveToTarget();
 	delete map3;
 	getchar();

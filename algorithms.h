@@ -77,4 +77,19 @@ public:
 };
 
 
+class BestFirst : public NonRealTime {
+public:
+	priority_queue<Node*> queue;
+	bool FindPath();
+
+	BestFirst(Map *map) : NonRealTime(map) {}
+};
+
+class Astar : public NonRealTime {
+public:
+	priority_queue<Node*> queue;
+	bool FindPath();
+
+	Astar(Map *map) : NonRealTime(map) {}
+};
 
