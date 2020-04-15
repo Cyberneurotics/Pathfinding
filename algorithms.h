@@ -11,7 +11,7 @@ class Algorithm
 {
 public:
 	Map* map;
-	int nodes = 0;
+	unsigned int nodes = 0;
 
 	virtual void MoveToTarget() = 0;
 	virtual bool FindPath() = 0;
@@ -88,8 +88,19 @@ public:
 class Astar : public NonRealTime {
 public:
 	priority_queue<Node*> queue;
+
 	bool FindPath();
 
 	Astar(Map *map) : NonRealTime(map) {}
+};
+
+//depth direction astar
+class DDAstar : public NonRealTime {
+public:
+	priority_queue<Node*> queue;
+
+	bool FindPath();
+	
+	DDAstar(Map *map) : NonRealTime(map) {}
 };
 

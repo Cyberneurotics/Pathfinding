@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "map.h"
-#include <climits>
+#include <limits>
 
 Map::Map()
 {
@@ -16,7 +16,7 @@ Map::Map(int w, int h, int** map, Coordinate agent, Coordinate target)
 
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
-			matrix[i][j] = Node{ Coordinate{i,j} , (bool)map[i][j], NULL, false, INT_MAX, INT_MAX };
+			matrix[i][j] = Node{ Coordinate{i,j} , (bool)map[i][j], NULL, false, std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
 		}
 	}
 

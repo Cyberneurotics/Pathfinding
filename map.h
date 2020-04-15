@@ -15,7 +15,7 @@ struct Node {
 	bool passable;	
 	Node* parent;
 	bool visited;
-	int f, g;
+	double f, g;
 
 	friend bool operator<(Node a, Node b) {
 		return a.f > b.f;
