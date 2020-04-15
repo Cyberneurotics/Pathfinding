@@ -389,7 +389,7 @@ bool Astar::FindPath()
 	clock_t clk = clock();
 
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
-	start->f = Manhattan(start->co, map->target);
+	start->f = Euclidean(start->co, map->target);
 	start->g = 0;
 	queue.push(start);
 
@@ -450,48 +450,70 @@ bool DDAstar::FindPath()
 {
 	clock_t clk = clock();
 
-	double m = (map->agent.y - map->target.y) / (map->agent.x - map->target.x);
+	int delta_y = map->target.y - map->agent.y;
+	int delta_x = map->target.x - map->agent.x;
 
 	bool astar = false;
 
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
-	start->f = Manhattan(start->co, map->target);
+	start->f = Euclidean(start->co, map->target);
 	start->g = 0;
+	start->visited = true;
 	queue.push(start);
 
 	while (!queue.empty()) {
 		auto node_ptr = queue.top();
 		queue.pop();
 
+		cout << node_ptr->co.x << "," << node_ptr->co.y << endl;
 		if (ReachTarget(*node_ptr))
 			break;
 
-		if (node_ptr->visited) {
-			continue;
-		}
-		node_ptr->visited = true;
-
-
 		if (!astar) {
+			int x = delta_x / abs(delta_x);
+			int y = delta_y / abs(delta_y);
 
+			Coordinate next_step{node_ptr->co.x + x, node_ptr->co.y + y};
+			if (!map->IsPassable(next_step)) {
+				astar = true;
+				start->g = std::numeric_limits<double>::max();
+				node_ptr->f = Euclidean(start->co, map->target);
+				node_ptr->g = 0;
+				queue.push(node_ptr);
+				continue;
+			}
+			else {
+				Node *adj_node = &map->matrix[next_step.x][next_step.y];
+				adj_node->parent = node_ptr;
+				queue.push(adj_node);
+			}
 		}
 		else {
-
+			if (node_ptr->visited) {
+				continue;
+			}
+			node_ptr->visited = true;
 			Coordinate adjs[] = {
-				Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
-				Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
-				Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
-				Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 			};
 
 			for (auto adj : adjs) {
 				if (map->IsPassable(adj)) {
 					Node *adj_node = &map->matrix[adj.x][adj.y];
 					if (!adj_node->visited) {
-						if (adj_node->g > node_ptr->g + 1) {
-							adj_node->g = node_ptr->g + 1;
+						double weight = abs(adj_node->co.x - node_ptr->co.x) + abs(adj_node->co.y - node_ptr->co.y) == 1 ? 1 : 1.4;
+						if (adj_node->g > node_ptr->g + weight) {
+							adj_node->g = node_ptr->g + weight;
 						}
-						adj_node->f = adj_node->g + Manhattan(adj_node->co, map->target);
+						adj_node->f = adj_node->g + Euclidean(adj_node->co, map->target);
 						adj_node->parent = node_ptr;
 						queue.push(adj_node);
 					}

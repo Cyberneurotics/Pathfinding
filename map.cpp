@@ -20,6 +20,11 @@ Map::Map(int w, int h, int** map, Coordinate agent, Coordinate target)
 		}
 	}
 
+	for (int i = 0; i < w; i++) {
+		delete[] map[i];
+	}
+	delete map;
+
 	this->agent = agent;
 	this->target = target;
 }

@@ -107,13 +107,18 @@ int **m5 = new int*[32]{
 
 Map* map5 = new Map(32, 32, m5, Coordinate(16, 16), Coordinate(0, 0));
 
+Map* maps[] = { map1,map2,map3,map4,map5 };
 Algorithm * algo;
+
+void free() {
+	delete[] maps;
+}
 
 int main()
 {
 	algo = new Astar(map4);
 	algo->MoveToTarget();
-	delete map3;
+	free();
 	getchar();
 	return 0;
 }
