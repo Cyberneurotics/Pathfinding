@@ -1,11 +1,14 @@
 #pragma once
 
 #include "map.h"
+#include "ds_template.h"
 #include <vector>
 #include <stack>
 #include <queue>
+#include <set>
 
 using namespace std;
+
 
 class Algorithm
 {
@@ -61,7 +64,7 @@ public:
 //breadth first search
 class BFS : public NonRealTime {
 public:
-	queue<Node*> queue;
+	unique_queue<Node*> queue;
 
 	bool FindPath();
 
@@ -70,7 +73,7 @@ public:
 
 class Dijkstra : public NonRealTime {
 public:
-	priority_queue<Node*> queue;
+	unique_priority_queue<Node*, Node> queue;
 	bool FindPath();
 
 	Dijkstra(Map *map) : NonRealTime(map) {}
@@ -79,7 +82,7 @@ public:
 
 class BestFirst : public NonRealTime {
 public:
-	priority_queue<Node*> queue;
+	unique_priority_queue<Node*, Node> queue;
 	bool FindPath();
 
 	BestFirst(Map *map) : NonRealTime(map) {}
@@ -87,7 +90,7 @@ public:
 
 class Astar : public NonRealTime {
 public:
-	priority_queue<Node*> queue;
+	unique_priority_queue<Node*, Node> queue;
 
 	bool FindPath();
 
@@ -95,12 +98,18 @@ public:
 };
 
 //depth direction astar
-class DDAstar : public NonRealTime {
+class DDAstar : public Astar {
 public:
-	priority_queue<Node*> queue;
-
 	bool FindPath();
-	
-	DDAstar(Map *map) : NonRealTime(map) {}
+	void MoveToTarget();
+	DDAstar(Map *map) : Astar(map) {}
+};
+
+//improved astar
+class IAstar : public Astar {
+public :
+	bool FindPath();
+
+	IAstar(Map *map) : Astar(map) {}
 };
 

@@ -15,12 +15,18 @@ struct Node {
 	bool passable;	
 	Node* parent;
 	bool visited;
-	double f, g;
+	int f, g;
 
-	friend bool operator<(Node a, Node b) {
-		return a.f > b.f;
+	bool operator()(Node *a, Node *b) const {
+		return a->f > b->f;
+	}
+
+	bool operator<(const Node& rhs) const
+	{
+		return f < rhs.f;
 	}
 };
+
 
 
 class Map

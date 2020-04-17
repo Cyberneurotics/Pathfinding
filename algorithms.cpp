@@ -24,12 +24,12 @@ bool Algorithm::ReachTarget(Node node)
 	return ReachTarget(node.co);
 }
 
-
-
 Algorithm::Algorithm(Map* map)
 	:map(map)
 {
 }
+
+
 
 void NonRealTime::MoveToTarget()
 {
@@ -39,12 +39,17 @@ void NonRealTime::MoveToTarget()
 			return;
 		}
 
+	int length = 0;
+	//cout << "Path length: " << route.size() << endl;
 	while (!ReachTarget())
 	{
+		length += abs(map->agent.x - route.top().x) + abs(map->agent.y - route.top().y) == 1 ? 10 : 14;
 		map->agent = route.top();
 		route.pop();
 		map->DisplayMap();
 	}
+
+	cout << "Path length: " << length / 10 << endl;
 }
 
 bool NonRealTime::GenerateRoute()
@@ -67,7 +72,7 @@ bool DFS::FindPath()
 {
 	clock_t clk = clock();
 
-	stack<Node*> stk;
+	unique_stack<Node*> stk;
 
 	Node start = map->matrix[map->agent.x][map->agent.y];
 	stk.push(&start);
@@ -89,6 +94,11 @@ bool DFS::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
@@ -121,7 +131,7 @@ bool IDS::FindPath()
 {
 	clock_t clk = clock();
 
-	bool found = IDDFS(100);
+	bool found = IDDFS(INT_MAX);
 	if (!found) {
 		cout << "no path found" << endl;
 		return false;
@@ -162,6 +172,11 @@ bool IDS::DLS(Node *node_ptr, int limit)
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 	};
 
 	for (auto adj : adjs) {
@@ -219,6 +234,11 @@ bool BFS::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
@@ -270,13 +290,19 @@ bool Dijkstra::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
 			if (map->IsPassable(adj)) {
 				Node *adj_node = &map->matrix[adj.x][adj.y];
-				if (!adj_node->visited && adj_node->g > node_ptr->g+1) {
-					adj_node->f = node_ptr->f + 1;
+				int weight = abs(adj_node->co.x - node_ptr->co.x) + abs(adj_node->co.y - node_ptr->co.y) == 1 ? 10 : 14;
+				if (!adj_node->visited && adj_node->f > node_ptr->f + weight) {
+					adj_node->f= node_ptr->f + weight;
 					queue.push(adj_node);
 					adj_node->parent = node_ptr;
 				}
@@ -298,7 +324,11 @@ bool Dijkstra::FindPath()
 }
 
 inline int Manhattan(Coordinate a, Coordinate b) {
-	return abs(a.x - b.x) + abs(a.y - b.y);
+	return (abs(a.x - b.x) + abs(a.y - b.y)) * 10;
+}
+
+inline double Euclidean(Coordinate a, Coordinate b) {
+	return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
 }
 
 bool BestFirst::FindPath()
@@ -308,7 +338,7 @@ bool BestFirst::FindPath()
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
 	start->f = Manhattan(start->co, map->target);
 	queue.push(start);
-	
+
 	while (!queue.empty()) {
 		auto node_ptr = queue.top();
 		queue.pop();
@@ -326,6 +356,11 @@ bool BestFirst::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
+
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
@@ -342,7 +377,7 @@ bool BestFirst::FindPath()
 		if (queue.size() > nodes)
 			nodes = queue.size();
 	}
-
+		
 	if (!GenerateRoute()) {
 		cout << "no path found!" << endl;
 		return false;
@@ -390,13 +425,13 @@ bool Astar::FindPath()
 			if (map->IsPassable(adj)) {
 				Node *adj_node = &map->matrix[adj.x][adj.y];
 				if (!adj_node->visited) {
-					double weight = abs(adj_node->co.x - node_ptr->co.x) + abs(adj_node->co.y - node_ptr->co.y) == 1 ? 1 : 1.4;
+					int weight = abs(adj_node->co.x - node_ptr->co.x) + abs(adj_node->co.y - node_ptr->co.y) == 1 ? 10 : 14;
 					if (adj_node->g > node_ptr->g + weight) {
 						adj_node->g = node_ptr->g + weight;
 					}
-					adj_node->f = adj_node->g + Euclidean(adj_node->co, map->target);
+					adj_node->f = adj_node->g + Manhattan(adj_node->co, map->target);
 					adj_node->parent = node_ptr;
-					queue.push(adj_node);				
+					queue.push(adj_node);
 				}
 			}
 		}
@@ -419,21 +454,59 @@ bool DDAstar::FindPath()
 {
 	clock_t clk = clock();
 
-	double m = (map->agent.y - map->target.y) / (map->agent.x - map->target.x);
+	int delta_x = map->target.x - map->agent.x;
+	int delta_y = map->target.y - map->agent.y;
 
-	bool astar = false;
+	int x = delta_x / abs(delta_x);
+	int y = delta_y / abs(delta_y);
+	Coordinate next{ map->agent.x + x, map->agent.y + y };
+
+	bool is_astar = true;
+	while (map->IsPassable(next)) {
+		if (ReachTarget()) {
+			is_astar = false;
+			break;
+		}
+		nodes++;
+		map->agent = next;
+		next.x += x;
+		next.y += y;
+
+		//map->DisplayMap();
+	}
+
+	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
+	cout << "Nodes expanded: " << nodes << endl;
+
+	if (is_astar) {
+		Astar *astar = new Astar(map);
+		astar->MoveToTarget();
+		nodes += astar->nodes;
+		delete astar;
+	}
+
+	cout << "Search time: " << (clock() - clk) * 1.0 / CLOCKS_PER_SEC * 1000 << "ms" << endl;
+	cout << "Nodes expanded: " << nodes << endl;
+	return true;
+}
+
+void DDAstar::MoveToTarget() {
+	FindPath();
+}
+
+bool IAstar::FindPath()
+{
+	clock_t clk = clock();
 
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
-	start->f = Euclidean(start->co, map->target);
+	start->f = 2 * Manhattan(start->co, map->target);
 	start->g = 0;
-	start->visited = true;
 	queue.push(start);
 
 	while (!queue.empty()) {
 		auto node_ptr = queue.top();
 		queue.pop();
 
-		cout << node_ptr->co.x << "," << node_ptr->co.y << endl;
 		if (ReachTarget(*node_ptr))
 			break;
 
@@ -442,30 +515,29 @@ bool DDAstar::FindPath()
 		}
 		node_ptr->visited = true;
 
+		Coordinate adjs[] = {
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
+			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
 
-		if (!astar) {
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
+			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
+		};
 
-		}
-		else {
-
-			Coordinate adjs[] = {
-				Coordinate{node_ptr->co.x + 1, node_ptr->co.y},
-				Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
-				Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
-				Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
-			};
-
-			for (auto adj : adjs) {
-				if (map->IsPassable(adj)) {
-					Node *adj_node = &map->matrix[adj.x][adj.y];
-					if (!adj_node->visited) {
-						if (adj_node->g > node_ptr->g + 1) {
-							adj_node->g = node_ptr->g + 1;
-						}
-						adj_node->f = adj_node->g + Manhattan(adj_node->co, map->target);
-						adj_node->parent = node_ptr;
-						queue.push(adj_node);
+		for (auto adj : adjs) {
+			if (map->IsPassable(adj)) {
+				Node *adj_node = &map->matrix[adj.x][adj.y];
+				if (!adj_node->visited) {
+					int weight = abs(adj_node->co.x - node_ptr->co.x) + abs(adj_node->co.y - node_ptr->co.y) == 1 ? 10 : 14;
+					if (adj_node->g > node_ptr->g + weight) {
+						adj_node->g = node_ptr->g + weight;
 					}
+					adj_node->f = adj_node->g + 2 * Manhattan(adj_node->co, map->target);
+					adj_node->parent = node_ptr;
+					queue.push(adj_node);
 				}
 			}
 		}

@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="algorithms.h" />
+    <ClInclude Include="ds_template.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
