@@ -24,12 +24,12 @@ bool Algorithm::ReachTarget(Node node)
 	return ReachTarget(node.co);
 }
 
+
+
 Algorithm::Algorithm(Map* map)
 	:map(map)
 {
 }
-
-
 
 void NonRealTime::MoveToTarget()
 {
@@ -39,7 +39,6 @@ void NonRealTime::MoveToTarget()
 			return;
 		}
 
-	cout << "Path length: " << route.size() << endl;
 	while (!ReachTarget())
 	{
 		map->agent = route.top();
@@ -90,11 +89,6 @@ bool DFS::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
-
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}		
 		};
 
 		for (auto adj : adjs) {
@@ -168,11 +162,6 @@ bool IDS::DLS(Node *node_ptr, int limit)
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
-
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 	};
 
 	for (auto adj : adjs) {
@@ -230,11 +219,6 @@ bool BFS::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
-
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
@@ -268,7 +252,7 @@ bool Dijkstra::FindPath()
 
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
 	queue.push(start);
-	start->g = 0;
+	start->f = 0;
 	while (!queue.empty()) {
 		auto node_ptr = queue.top();
 		queue.pop();
@@ -286,19 +270,13 @@ bool Dijkstra::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
-
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
 			if (map->IsPassable(adj)) {
 				Node *adj_node = &map->matrix[adj.x][adj.y];
-				double weight = abs(adj_node->co.x - node_ptr->co.x) + abs(adj_node->co.y - node_ptr->co.y) == 1 ? 1 : 1.4;
-				if (!adj_node->visited && adj_node->g > node_ptr->g+weight) {
-					adj_node->g = node_ptr->g + weight;
+				if (!adj_node->visited && adj_node->g > node_ptr->g+1) {
+					adj_node->f = node_ptr->f + 1;
 					queue.push(adj_node);
 					adj_node->parent = node_ptr;
 				}
@@ -321,10 +299,6 @@ bool Dijkstra::FindPath()
 
 inline int Manhattan(Coordinate a, Coordinate b) {
 	return abs(a.x - b.x) + abs(a.y - b.y);
-}
-
-inline double Euclidean(Coordinate a, Coordinate b) {
-	return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
 }
 
 bool BestFirst::FindPath()
@@ -352,11 +326,6 @@ bool BestFirst::FindPath()
 			Coordinate{node_ptr->co.x - 1, node_ptr->co.y},
 			Coordinate{node_ptr->co.x , node_ptr->co.y + 1},
 			Coordinate{node_ptr->co.x , node_ptr->co.y - 1},
-
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x + 1, node_ptr->co.y - 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y + 1},
-			Coordinate{node_ptr->co.x - 1, node_ptr->co.y - 1}
 		};
 
 		for (auto adj : adjs) {
@@ -455,14 +424,16 @@ bool DDAstar::FindPath()
 	bool astar = false;
 
 	Node* start = &map->matrix[map->agent.x][map->agent.y];
-	start->f = Manhattan(start->co, map->target);
+	start->f = Euclidean(start->co, map->target);
 	start->g = 0;
+	start->visited = true;
 	queue.push(start);
 
 	while (!queue.empty()) {
 		auto node_ptr = queue.top();
 		queue.pop();
 
+		cout << node_ptr->co.x << "," << node_ptr->co.y << endl;
 		if (ReachTarget(*node_ptr))
 			break;
 
